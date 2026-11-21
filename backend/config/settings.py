@@ -1,6 +1,8 @@
 import os
 from pathlib import Path
 
+from corsheaders.defaults import default_headers
+
 BASE_DIR = Path(__file__).resolve().parent.parent
 FRONTEND_DIST = BASE_DIR.parent / "frontend" / "dist"
 
@@ -64,6 +66,7 @@ DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
 
 # Public compute API with no cookies or user accounts.
 CORS_ALLOW_ALL_ORIGINS = True
+CORS_ALLOW_HEADERS = (*default_headers, "x-review-key")
 
 REST_FRAMEWORK = {
     "DEFAULT_AUTHENTICATION_CLASSES": [],
@@ -82,7 +85,24 @@ LOGGING = {
 
 WHITENOISE_INDEX_FILE = True
 
+def _env_file(name: str) -> str:
+    path = BASE_DIR.parent / ".env"
+    if not path.exists():
+        return ""
+    for line in path.read_text(encoding="utf-8").splitlines():
+        stripped = line.strip()
+        if not stripped or stripped.startswith("#") or "=" not in stripped:
+            continue
+        key, value = stripped.split("=", 1)
+        if key.strip() == name:
+            return value.strip().strip('"').strip("'")
+    return ""
+
+
 ORS_API_KEY = os.environ.get("ORS_API_KEY", "").strip()
+# Read after process env so a local .env key unlocks review edits without a code change.
+REVIEW_ADMIN_KEY = os.environ.get("REVIEW_ADMIN_KEY", "").strip() or _env_file("REVIEW_ADMIN_KEY")
+REVIEW_STORE = BASE_DIR / "data" / "reviews.json"
 NOMINATIM_USER_AGENT = os.environ.get(
     "NOMINATIM_USER_AGENT",
     "WeatherAwareTruckRouting/1.0 (spotter assessment)",

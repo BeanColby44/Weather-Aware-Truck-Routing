@@ -2,6 +2,8 @@
 
 Weather-Aware Truck Routing is a React and Django planner for choosing a truck route by weather risk, load weight, and travel time. A driver enters an origin, a destination, a departure time, and a load weight in pounds. The app geocodes both places, requests up to three routes, and samples the hourly forecast along each road at the time the truck is expected to arrive there.
 
+![A truck on a stormlit mountain highway](<Stormlit Mountain Highway.png>)
+
 Samples are taken every 10, 25, or 50 miles. Each sample is a checkpoint. Its risk is the worst of wind, rain, and snow, scored as Low, Moderate, High, Severe, or No Travel. Heavier loads tighten the wind rules. Wind of 35–44 mph stays High at 40,000 lb and becomes Severe above that weight. Wind of 45–54 mph stays Severe at 30,000 lb and becomes No Travel above that weight. Wind of 55 mph or more is No Travel for any load. Miles between two checkpoints use the worse of the two ends, so a bad stretch is counted even when a neighboring sample is calm.
 
 The recommended route is not always the fastest. Routes are ordered by fewest no-travel miles, then fewest severe miles, then fewest high miles, then lowest average risk, then shortest travel time. No-travel miles come first so a closed corridor is not chosen over a drivable one. Average risk is mile-weighted: Low 1, Moderate 2, High 3, Severe 4, No Travel 5.
@@ -17,6 +19,25 @@ The app runs with no API keys. Geocoding uses OpenStreetMap Nominatim. Weather u
 - Email: [colbybean321@gmail.com](mailto:colbybean321@gmail.com)
 - Phone: +1 (689) 260-2573
 - GitHub: [github.com/BeanColby44](https://github.com/BeanColby44)
+
+## Skills used
+
+![HTML5](https://img.shields.io/badge/HTML5-E34F26?style=for-the-badge&logo=html5&logoColor=white)
+![CSS3](https://img.shields.io/badge/CSS3-1572B6?style=for-the-badge&logo=css&logoColor=white)
+![JavaScript](https://img.shields.io/badge/JavaScript-F7DF1E?style=for-the-badge&logo=javascript&logoColor=black)
+![TypeScript](https://img.shields.io/badge/TypeScript-007ACC?style=for-the-badge&logo=typescript&logoColor=white)
+![React](https://img.shields.io/badge/React-20232A?style=for-the-badge&logo=react&logoColor=61DAFB)
+![Vite](https://img.shields.io/badge/Vite-646CFF?style=for-the-badge&logo=vite&logoColor=white)
+![Leaflet](https://img.shields.io/badge/Leaflet-199900?style=for-the-badge&logo=leaflet&logoColor=white)
+
+![Python](https://img.shields.io/badge/Python-3776AB?style=for-the-badge&logo=python&logoColor=white)
+![Django](https://img.shields.io/badge/Django-092E20?style=for-the-badge&logo=django&logoColor=white)
+![Django REST](https://img.shields.io/badge/Django%20REST-092E20?style=for-the-badge&logo=django&logoColor=white)
+![Gunicorn](https://img.shields.io/badge/Gunicorn-499848?style=for-the-badge&logo=gunicorn&logoColor=white)
+
+![OpenStreetMap](https://img.shields.io/badge/OpenStreetMap-7EBC6F?style=for-the-badge&logo=openstreetmap&logoColor=white)
+![Docker](https://img.shields.io/badge/Docker-2496ED?style=for-the-badge&logo=docker&logoColor=white)
+![Node.js](https://img.shields.io/badge/Node.js-339933?style=for-the-badge&logo=nodedotjs&logoColor=white)
 
 ## Run it locally
 
