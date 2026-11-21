@@ -27,7 +27,7 @@ const PRESETS = [
   },
 ];
 
-export default function App() {
+export default function App({ onHome }: { onHome: () => void }) {
   const [origin, setOrigin] = useState("Chicago, IL");
   const [destination, setDestination] = useState("St. Louis, MO");
   const [departure, setDeparture] = useState(defaultDeparture);
@@ -213,14 +213,14 @@ export default function App() {
   return (
     <div className="app">
       <header className="topbar">
-        <div className="brand">
-          <strong>Colby</strong>
+        <button type="button" className="brand" aria-label="Back to home" onClick={onHome}>
+          <img src="/mark.png?v=2" alt="Colby Weather-Aware Truck Routing" />
           <span>
             Weather-Aware
             <br />
             Truck Routing
           </span>
-        </div>
+        </button>
         <nav className="main-nav" aria-label="Primary">
           <button
             type="button"

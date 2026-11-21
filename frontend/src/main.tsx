@@ -8,7 +8,7 @@ import "./styles.css";
 function Root() {
   const [started, setStarted] = useState(false);
   if (!started) return <Landing onStart={() => setStarted(true)} />;
-  return <App />;
+  return <App onHome={() => setStarted(false)} />;
 }
 
 createRoot(document.getElementById("root")!).render(

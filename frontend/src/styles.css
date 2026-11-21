@@ -55,7 +55,7 @@ button, input, select { font: inherit; color: inherit; }
 
 .app {
   display: grid;
-  grid-template-rows: 56px 1fr;
+  grid-template-rows: 76px 1fr;
   height: 100vh;
 }
 
@@ -69,15 +69,24 @@ button, input, select { font: inherit; color: inherit; }
   color: white;
 }
 
-.brand { display: flex; align-items: center; gap: 12px; min-width: 0; }
-
-.brand strong {
-  font-size: 1rem;
-  letter-spacing: 0.08em;
-  text-transform: uppercase;
+.brand {
+  display: flex;
+  align-items: center;
+  min-width: 0;
+  border: 0;
+  padding: 0;
+  background: transparent;
+  color: inherit;
+  cursor: pointer;
 }
 
-.brand span { display: block; font-size: 0.75rem; line-height: 1.25; color: #d5deea; }
+.brand img {
+  display: block;
+  height: 64px;
+  width: auto;
+  max-width: min(420px, 52vw);
+  object-fit: contain;
+}
 
 .main-nav { display: flex; align-items: center; gap: 4px; }
 
@@ -1056,8 +1065,8 @@ th, td { text-align: left; padding: 6px 4px; border-bottom: 1px solid var(--line
 
 @media (max-width: 760px) {
   .app { height: auto; min-height: 100vh; padding-bottom: 64px; }
-  .topbar { height: auto; min-height: 56px; padding: 10px 14px; }
-  .brand { flex-wrap: wrap; gap: 4px 10px; }
+  .topbar { height: auto; min-height: 68px; padding: 8px 14px; }
+  .brand img { height: 56px; }
   .workspace { grid-template-columns: 1fr; grid-template-rows: auto minmax(380px, 58vh); }
   .sidebar, .map-column { grid-column: 1; grid-row: auto; }
   .map-column { height: min(58vh, 520px); min-height: 380px; }
@@ -1093,7 +1102,7 @@ th, td { text-align: left; padding: 6px 4px; border-bottom: 1px solid var(--line
 }
 
 @media (max-width: 420px) {
-  .brand span { font-size: 0.8rem; }
+  .brand img { height: 48px; }
 }
 
 html.dark .map { background: #121a26; }
