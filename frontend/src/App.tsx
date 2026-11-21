@@ -5,7 +5,7 @@ import PlaceField from "./components/PlaceField";
 import RouteDetail from "./components/RouteDetail";
 import { RISK_COLOR, RISK_LABEL, formatClock, formatWhen, weatherPhrase } from "./format";
 import { readSaved, tripKey, writeSaved, type SavedTrip } from "./saved";
-import { readSettings, writeSettings, type RouteSort } from "./settings";
+import { asSample, readSettings, writeSettings, type RouteSort } from "./settings";
 import type { HeatmapResponse, PlanResponse, RiskLevel, RoutePlan } from "./types";
 
 const PRESETS = [
@@ -172,7 +172,7 @@ export default function App({ onHome }: { onHome: () => void }) {
     setDestination(trip.destination);
     setDeparture(trip.departureLocal);
     setLoad(trip.load);
-    setSample(trip.sample);
+    setSample(asSample(trip.sample));
     setPlan(trip.plan);
     setSelectedId(trip.selectedId ?? trip.plan.recommended_route_id);
     setError(null);
@@ -334,7 +334,7 @@ export default function App({ onHome }: { onHome: () => void }) {
             load={load}
             onLoad={setLoad}
             sample={sample}
-            onSample={setSample}
+            onSample={(value) => setSample(asSample(value))}
             routeSort={routeSort}
             onSort={setRouteSort}
             timelineOpen={timelineOpen}
@@ -374,7 +374,7 @@ export default function App({ onHome }: { onHome: () => void }) {
                     setOrigin(preset.origin);
                     setDestination(preset.destination);
                     setLoad(preset.load);
-                    setSample(preset.sample);
+                    setSample(asSample(preset.sample));
                   }}
                 >
                   {preset.label}
@@ -388,7 +388,7 @@ export default function App({ onHome }: { onHome: () => void }) {
               </label>
               <label>
                 Sample every
-                <select value={sample} onChange={(event) => setSample(Number(event.target.value))}>
+                <select value={sample} onChange={(event) => setSample(asSample(Number(event.target.value)))}>
                   <option value={10}>10 miles</option>
                   <option value={25}>25 miles</option>
                   <option value={50}>50 miles</option>
