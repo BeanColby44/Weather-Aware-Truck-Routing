@@ -1,6 +1,9 @@
+import tempfile
 from datetime import datetime, timezone
+from pathlib import Path
 
-from django.test import SimpleTestCase
+from django.core import mail
+from django.test import SimpleTestCase, override_settings
 from rest_framework.test import APIClient
 
 from planner.services.geocode import place_label, suggest
@@ -93,3 +96,70 @@ class PlanApiTests(SimpleTestCase):
         response = client.get("/api/health")
         self.assertEqual(response.status_code, 200)
         self.assertEqual(response.json()["status"], "ok")
+
+
+class ReviewApiTests(SimpleTestCase):
+    def setUp(self):
+        self.client = APIClient()
+        self.tmp = tempfile.TemporaryDirectory()
+        self.override = override_settings(
+            REVIEW_STORE=Path(self.tmp.name) / "reviews.json",
+            REVIEW_ADMIN_KEY="colbyleebean",
+            EMAIL_BACKEND="django.core.mail.backends.locmem.EmailBackend",
+            EMAIL_HOST_PASSWORD="app-password",
+            EMAIL_HOST_USER="colbybean321@gmail.com",
+            FEEDBACK_TO="colbybean321@gmail.com",
+        )
+        self.override.enable()
+
+    def tearDown(self):
+        self.override.disable()
+        self.tmp.cleanup()
+
+    def test_reviews_are_shared_and_password_protects_changes(self):
+        created = self.client.post(
+            "/api/reviews",
+            {"name": "Alex", "text": "Clear wind rules.", "stars": 4},
+            format="json",
+        )
+        self.assertEqual(created.status_code, 201)
+        review_id = created.json()["id"]
+        listed = self.client.get("/api/reviews")
+        self.assertEqual(listed.status_code, 200)
+        self.assertEqual(listed.json()["reviews"][0]["text"], "Clear wind rules.")
+
+        denied = self.client.put(
+            f"/api/reviews/{review_id}",
+            {"name": "Alex", "text": "Changed.", "stars": 3},
+            format="json",
+        )
+        self.assertEqual(denied.status_code, 403)
+
+        updated = self.client.put(
+            f"/api/reviews/{review_id}",
+            {"name": "Alex", "text": "Changed.", "stars": 3},
+            format="json",
+            HTTP_X_REVIEW_KEY="colbyleebean",
+        )
+        self.assertEqual(updated.status_code, 200)
+        self.assertEqual(updated.json()["stars"], 3)
+
+        removed = self.client.delete(f"/api/reviews/{review_id}", HTTP_X_REVIEW_KEY="colbyleebean")
+        self.assertEqual(removed.status_code, 204)
+        self.assertEqual(self.client.get("/api/reviews").json()["reviews"], [])
+
+    def test_feedback_is_emailed(self):
+        response = self.client.post(
+            "/api/feedback",
+            {"name": "Alex", "text": "The map labels were hard to read."},
+            format="json",
+        )
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(len(mail.outbox), 1)
+        self.assertEqual(mail.outbox[0].to, ["colbybean321@gmail.com"])
+        self.assertIn("hard to read", mail.outbox[0].body)
+
+    def test_feedback_without_mail_password_is_refused(self):
+        with override_settings(EMAIL_HOST_PASSWORD=""):
+            response = self.client.post("/api/feedback", {"name": "Alex", "text": "Hello"}, format="json")
+        self.assertEqual(response.status_code, 503)

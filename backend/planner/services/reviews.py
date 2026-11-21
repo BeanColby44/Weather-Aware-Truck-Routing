@@ -71,6 +71,13 @@ def update_review(review_id: str, payload: object) -> dict:
     raise ReviewError("That review is not on the list.", status=404)
 
 
+def require_admin(key: str) -> None:
+    if not admin_configured():
+        raise ReviewError("Review editing is not set up.", status=503)
+    if not admin_matches(key):
+        raise ReviewError("Wrong password.", status=403)
+
+
 def delete_review(review_id: str) -> None:
     with _lock:
         notes = _read()

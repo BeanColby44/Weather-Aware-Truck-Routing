@@ -5,9 +5,13 @@ from rest_framework.permissions import AllowAny
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
+from django.core.mail import BadHeaderError
+
+from planner.services.feedback import send_feedback
 from planner.services.geocode import suggest
 from planner.services.heatmap import build_heatmap
 from planner.services.plan import build_plan
+from planner.services.reviews import ReviewError, create_review, delete_review, list_reviews, require_admin, update_review
 from planner.services.risk import PlannerError
 from planner.services.validate import parse_heatmap_request, parse_plan_request
 
@@ -60,3 +64,52 @@ class HeatmapView(OpenAPIView):
         except Exception:
             logger.exception("heatmap failed")
             return Response({"error": "Something went wrong while building the forecast."}, status=500)
+
+
+class ReviewsView(OpenAPIView):
+    def get(self, request):
+        return Response({"reviews": list_reviews()})
+
+    def post(self, request):
+        try:
+            return Response(create_review(request.data), status=201)
+        except ReviewError as exc:
+            return Response({"error": exc.message}, status=exc.status)
+
+
+class ReviewDetailView(OpenAPIView):
+    def put(self, request, review_id):
+        try:
+            require_admin(request.headers.get("x-review-key", ""))
+            return Response(update_review(review_id, request.data))
+        except ReviewError as exc:
+            return Response({"error": exc.message}, status=exc.status)
+
+    def delete(self, request, review_id):
+        try:
+            require_admin(request.headers.get("x-review-key", ""))
+            delete_review(review_id)
+            return Response(status=204)
+        except ReviewError as exc:
+            return Response({"error": exc.message}, status=exc.status)
+
+
+class ReviewAuthView(OpenAPIView):
+    def post(self, request):
+        try:
+            require_admin(request.headers.get("x-review-key", ""))
+            return Response(status=204)
+        except ReviewError as exc:
+            return Response({"error": exc.message}, status=exc.status)
+
+
+class FeedbackView(OpenAPIView):
+    def post(self, request):
+        try:
+            send_feedback(request.data)
+            return Response({"sent": True})
+        except ReviewError as exc:
+            return Response({"error": exc.message}, status=exc.status)
+        except (OSError, BadHeaderError):
+            logger.exception("feedback email failed")
+            return Response({"error": "The message could not be emailed. Try again."}, status=502)

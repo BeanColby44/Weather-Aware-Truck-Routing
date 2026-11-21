@@ -1,5 +1,7 @@
 # Weather-Aware Truck Routing
 
+Live site: [https://weather-aware-truck-routing.up.railway.app/](https://weather-aware-truck-routing.up.railway.app/)
+
 Weather-Aware Truck Routing is a React and Django planner for choosing a truck route by weather risk, load weight, and travel time. A driver enters an origin, a destination, a departure time, and a load weight in pounds. The app geocodes both places, requests up to three routes, and samples the hourly forecast along each road at the time the truck is expected to arrive there.
 ![A truck on a stormlit mountain highway](<mark.png>)
 ![A truck on a stormlit mountain highway](<Weather-Aware Truck Routing Dashboard (1).png>)
@@ -99,6 +101,8 @@ cd backend
 The tests cover band edges, the three load rules, segment miles, and the recommendation sort. They do not call the network.
 
 ## Hosting
+
+The live site is [https://weather-aware-truck-routing.up.railway.app/](https://weather-aware-truck-routing.up.railway.app/).
 
 The Dockerfile builds the React app and serves it with Django, so the site and the API share one origin.
 

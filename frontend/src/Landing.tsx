@@ -1,7 +1,7 @@
 import { FormEvent, useEffect, useRef, useState } from "react";
+import { checkReviewKey, createReview, deleteReview, listReviews, sendFeedback, updateReview } from "./api";
 import "./landing.css";
 
-const OWNER_PASSWORD = "colbyleebean";
 const EMAIL = "colbybean321@gmail.com";
 const PHONE_LABEL = "+1 (689) 260-2573";
 const PHONE_HREF = "tel:+16892602573";
@@ -13,21 +13,6 @@ type Note = {
   at: string;
   stars?: number;
 };
-
-function readNotes(key: string): Note[] {
-  try {
-    const raw = localStorage.getItem(key);
-    if (!raw) return [];
-    const parsed = JSON.parse(raw) as Note[];
-    return Array.isArray(parsed) ? parsed : [];
-  } catch {
-    return [];
-  }
-}
-
-function writeNotes(key: string, notes: Note[]) {
-  localStorage.setItem(key, JSON.stringify(notes));
-}
 
 function StarIcon() {
   return (
@@ -73,37 +58,54 @@ function Stars({ value, onPick }: { value: number; onPick?: (value: number) => v
 }
 
 export default function Landing({ onStart }: { onStart: () => void }) {
-  const [feedback, setFeedback] = useState<Note[]>(() => readNotes("landing-feedback"));
-  const [reviews, setReviews] = useState<Note[]>(() => readNotes("landing-reviews"));
   const [feedbackName, setFeedbackName] = useState("");
   const [feedbackText, setFeedbackText] = useState("");
   const [feedbackSent, setFeedbackSent] = useState(false);
+  const [feedbackError, setFeedbackError] = useState("");
+  const [reviews, setReviews] = useState<Note[]>([]);
   const [reviewName, setReviewName] = useState("");
   const [reviewText, setReviewText] = useState("");
   const [stars, setStars] = useState(5);
   const [reviewSent, setReviewSent] = useState(false);
+  const [reviewError, setReviewError] = useState("");
   const [editingReviewId, setEditingReviewId] = useState<string | null>(null);
   const [gate, setGate] = useState<{ kind: "edit"; item: Note } | { kind: "remove"; id: string } | null>(null);
   const [password, setPassword] = useState("");
   const [passwordWrong, setPasswordWrong] = useState(false);
+  const [ownerKey, setOwnerKey] = useState("");
   const passwordRef = useRef<HTMLInputElement>(null);
 
   function go(id: string) {
     document.getElementById(id)?.scrollIntoView({ behavior: "smooth", block: "start" });
   }
 
-  function onFeedback(event: FormEvent) {
+  useEffect(() => {
+    let cancel = false;
+    listReviews()
+      .then((notes) => {
+        if (!cancel) setReviews(notes);
+      })
+      .catch(() => {
+        if (!cancel) setReviewError("Reviews could not be loaded.");
+      });
+    return () => {
+      cancel = true;
+    };
+  }, []);
+
+  async function onFeedback(event: FormEvent) {
     event.preventDefault();
     const text = feedbackText.trim();
     if (!text) return;
-    const next = [
-      { id: String(Date.now()), name: feedbackName.trim() || "Driver", text, at: new Date().toISOString() },
-      ...feedback,
-    ];
-    setFeedback(next);
-    writeNotes("landing-feedback", next);
-    setFeedbackText("");
-    setFeedbackSent(true);
+    setFeedbackError("");
+    setFeedbackSent(false);
+    try {
+      await sendFeedback({ name: feedbackName.trim(), text });
+      setFeedbackText("");
+      setFeedbackSent(true);
+    } catch (err) {
+      setFeedbackError(err instanceof Error ? err.message : "The message could not be emailed.");
+    }
   }
 
   function resetReviewForm() {
@@ -113,23 +115,30 @@ export default function Landing({ onStart }: { onStart: () => void }) {
     setStars(5);
   }
 
-  function onReview(event: FormEvent) {
+  async function onReview(event: FormEvent) {
     event.preventDefault();
     const text = reviewText.trim();
     if (!text) return;
-    const note = {
-      name: reviewName.trim() || "Driver",
-      text,
-      stars,
-      at: new Date().toISOString(),
-    };
-    const next = editingReviewId
-      ? reviews.map((item) => (item.id === editingReviewId ? { ...item, ...note } : item))
-      : [{ id: String(Date.now()), ...note }, ...reviews];
-    setReviews(next);
-    writeNotes("landing-reviews", next);
-    resetReviewForm();
-    setReviewSent(true);
+    const body = { name: reviewName.trim(), text, stars };
+    setReviewError("");
+    setReviewSent(false);
+    try {
+      if (editingReviewId) {
+        if (!ownerKey) {
+          setReviewError("Enter the owner password before saving.");
+          return;
+        }
+        const saved = await updateReview(editingReviewId, body, ownerKey);
+        setReviews((current) => current.map((item) => (item.id === saved.id ? saved : item)));
+      } else {
+        const saved = await createReview(body);
+        setReviews((current) => [saved, ...current.filter((item) => item.id !== saved.id)]);
+      }
+      resetReviewForm();
+      setReviewSent(true);
+    } catch (err) {
+      setReviewError(err instanceof Error ? err.message : "The review could not be saved.");
+    }
   }
 
   useEffect(() => {
@@ -145,10 +154,9 @@ export default function Landing({ onStart }: { onStart: () => void }) {
     document.getElementById("review")?.scrollIntoView({ behavior: "smooth", block: "start" });
   }
 
-  function removeReview(id: string) {
-    const next = reviews.filter((item) => item.id !== id);
-    setReviews(next);
-    writeNotes("landing-reviews", next);
+  async function removeReview(id: string, key: string) {
+    await deleteReview(id, key);
+    setReviews((current) => current.filter((item) => item.id !== id));
     if (editingReviewId === id) resetReviewForm();
   }
 
@@ -158,16 +166,27 @@ export default function Landing({ onStart }: { onStart: () => void }) {
     setPasswordWrong(false);
   }
 
-  function onPassword(event: FormEvent) {
+  async function onPassword(event: FormEvent) {
     event.preventDefault();
-    if (password !== OWNER_PASSWORD) {
+    try {
+      await checkReviewKey(password);
+    } catch (err) {
       setPasswordWrong(true);
+      setReviewError(err instanceof Error ? err.message : "Wrong password.");
       return;
     }
     const pending = gate;
+    const key = password;
+    setOwnerKey(key);
     closeGate();
     if (pending?.kind === "edit") editReview(pending.item);
-    if (pending?.kind === "remove") removeReview(pending.id);
+    if (pending?.kind === "remove") {
+      try {
+        await removeReview(pending.id, key);
+      } catch (err) {
+        setReviewError(err instanceof Error ? err.message : "The review could not be removed.");
+      }
+    }
   }
 
   return (
@@ -221,7 +240,7 @@ export default function Landing({ onStart }: { onStart: () => void }) {
         <ol>
           <li>Enter From and To. After two letters, pick a suggested place, then set departure and load weight.</li>
           <li>Choose Start, then Find routes. Open a route to read miles, arrival, wind, rain, and snow.</li>
-          <li>Save the comparison and open it again later. Contact, feedback, and reviews stay on this page.</li>
+          <li>Save the comparison and open it again later. Reviews on this page are shared with everyone.</li>
         </ol>
       </section>
 
@@ -242,10 +261,7 @@ export default function Landing({ onStart }: { onStart: () => void }) {
 
       <section className="land-block" id="feedback">
         <h2>Feedback</h2>
-        <p>
-          Tell me what worked on a trip and what should change. It is saved in this browser only and is not sent to an
-          email address.
-        </p>
+        <p>Tell me what worked on a trip and what should change. The message is emailed to {EMAIL}.</p>
         <form className="land-form" onSubmit={onFeedback}>
           <label>
             Name
@@ -264,23 +280,14 @@ export default function Landing({ onStart }: { onStart: () => void }) {
           <button type="submit" className="land-start">
             Send feedback
           </button>
-          {feedbackSent && <p className="land-note">Saved in this browser. Nothing was emailed.</p>}
+          {feedbackSent && <p className="land-note">Sent to {EMAIL}.</p>}
+          {feedbackError && <p className="lock-error">{feedbackError}</p>}
         </form>
-        {feedback.length > 0 && (
-          <ul className="note-list">
-            {feedback.map((item) => (
-              <li key={item.id}>
-                <strong>{item.name}</strong>
-                <span>{item.text}</span>
-              </li>
-            ))}
-          </ul>
-        )}
       </section>
 
       <section className="land-block" id="review">
         <h2>Review</h2>
-        <p>Rate the planner after a route comparison.</p>
+        <p>Rate the planner after a route comparison. Reviews are saved for everyone to read.</p>
         <form className="land-form" onSubmit={onReview}>
           <div className="stars">
             <span id="rating-label">Rating</span>
@@ -309,7 +316,8 @@ export default function Landing({ onStart }: { onStart: () => void }) {
               Cancel
             </button>
           )}
-          {reviewSent && <p className="land-note">Saved in this browser.</p>}
+          {reviewSent && <p className="land-note">Saved. Everyone can see this review.</p>}
+          {reviewError && <p className="lock-error">{reviewError}</p>}
         </form>
         {reviews.length === 0 ? (
           <p className="land-note">No reviews yet.</p>

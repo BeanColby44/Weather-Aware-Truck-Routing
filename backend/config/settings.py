@@ -102,7 +102,14 @@ def _env_file(name: str) -> str:
 ORS_API_KEY = os.environ.get("ORS_API_KEY", "").strip()
 # Read after process env so a local .env key unlocks review edits without a code change.
 REVIEW_ADMIN_KEY = os.environ.get("REVIEW_ADMIN_KEY", "").strip() or _env_file("REVIEW_ADMIN_KEY")
-REVIEW_STORE = BASE_DIR / "data" / "reviews.json"
+REVIEW_STORE = Path(os.environ.get("REVIEW_STORE", "")).expanduser() if os.environ.get("REVIEW_STORE") else BASE_DIR / "data" / "reviews.json"
+FEEDBACK_TO = os.environ.get("FEEDBACK_TO", "colbybean321@gmail.com").strip() or "colbybean321@gmail.com"
+EMAIL_BACKEND = "django.core.mail.backends.smtp.EmailBackend"
+EMAIL_HOST = os.environ.get("EMAIL_HOST", "smtp.gmail.com").strip() or "smtp.gmail.com"
+EMAIL_PORT = int(os.environ.get("EMAIL_PORT", "587") or "587")
+EMAIL_HOST_USER = os.environ.get("EMAIL_HOST_USER", FEEDBACK_TO).strip() or FEEDBACK_TO
+EMAIL_HOST_PASSWORD = os.environ.get("EMAIL_HOST_PASSWORD", "").strip() or _env_file("EMAIL_HOST_PASSWORD")
+EMAIL_USE_TLS = os.environ.get("EMAIL_USE_TLS", "1") != "0"
 NOMINATIM_USER_AGENT = os.environ.get(
     "NOMINATIM_USER_AGENT",
     "WeatherAwareTruckRouting/1.0 (spotter assessment)",
