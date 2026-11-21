@@ -94,6 +94,8 @@ button, input, select { font: inherit; color: inherit; }
 
 .nav-item:disabled { opacity: 0.45; cursor: not-allowed; }
 
+.top-actions { display: flex; align-items: center; gap: 8px; flex: none; }
+
 .theme {
   border: 1px solid rgba(255, 255, 255, 0.35);
   background: transparent;
@@ -102,6 +104,72 @@ button, input, select { font: inherit; color: inherit; }
   padding: 6px 12px;
   cursor: pointer;
 }
+
+.guide-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 1400;
+  display: grid;
+  place-items: center;
+  padding: 20px;
+  background: rgba(8, 18, 32, 0.46);
+}
+
+.guide {
+  width: min(560px, 100%);
+  max-height: min(86vh, 760px);
+  overflow: auto;
+  background: var(--panel);
+  color: var(--ink);
+  border-radius: 14px;
+  box-shadow: var(--shadow);
+  padding: 16px 18px 18px;
+}
+
+.guide-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 8px;
+}
+
+.guide-head h2 { margin: 0; }
+
+.guide h3 { margin: 16px 0 6px; font-size: 0.92rem; }
+
+.guide-steps, .guide-load {
+  margin: 0;
+  padding-left: 1.2rem;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  font-size: 0.9rem;
+  line-height: 1.4;
+}
+
+.guide-bands {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.guide-bands li {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  padding: 8px 10px;
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  background: var(--page);
+}
+
+.guide-bands strong { font-size: 0.82rem; }
+
+.guide-bands span { color: var(--muted); font-size: 0.84rem; line-height: 1.35; font-weight: 600; }
 
 .workspace {
   display: grid;
@@ -163,7 +231,7 @@ button, input, select { font: inherit; color: inherit; }
 
 .saved-actions .ghost { min-height: 36px; }
 
-.trip, .block, .rules, .cards {
+.trip, .block, .cards {
   background: var(--panel);
   border: 1px solid var(--line);
   border-radius: 12px;
@@ -172,7 +240,7 @@ button, input, select { font: inherit; color: inherit; }
 
 .cards { margin-top: 12px; display: flex; flex-direction: column; gap: 8px; }
 
-.block, .rules { margin-top: 12px; }
+.block { margin-top: 12px; }
 
 h2 { font-size: 0.95rem; margin: 0 0 10px; }
 
@@ -504,17 +572,11 @@ th, td { text-align: left; padding: 6px 4px; border-bottom: 1px solid var(--line
   font-weight: 700;
 }
 
-.rules { overflow-x: auto; }
-
-.rules summary { cursor: pointer; font-weight: 700; }
-
 .advanced { margin-top: 12px; }
 
 .advanced summary { cursor: pointer; font-weight: 700; }
 
 .advanced .presets, .advanced .split { margin-top: 10px; }
-
-.rules table { margin-top: 10px; min-width: 520px; }
 
 .phone-nav { display: none; }
 

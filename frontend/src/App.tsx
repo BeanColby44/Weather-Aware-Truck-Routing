@@ -47,6 +47,7 @@ export default function App() {
   const [detailOpen, setDetailOpen] = useState(false);
   const [routeSort, setRouteSort] = useState<RouteSort>(() => readSettings().routeSort);
   const [section, setSection] = useState<"plan" | "saved" | "weather" | "settings">("plan");
+  const [guideOpen, setGuideOpen] = useState(false);
   const [saved, setSaved] = useState<SavedTrip[]>(() => readSaved());
   const [justSaved, setJustSaved] = useState(false);
   const requestId = useRef(0);
@@ -250,10 +251,16 @@ export default function App() {
             Settings
           </button>
         </nav>
-        <button type="button" className="theme" aria-pressed={dark} onClick={() => setDark((value) => !value)}>
-          {dark ? "Light" : "Dark"}
-        </button>
+        <div className="top-actions">
+          <button type="button" className="theme" onClick={() => setGuideOpen(true)}>
+            How to use
+          </button>
+          <button type="button" className="theme" aria-pressed={dark} onClick={() => setDark((value) => !value)}>
+            {dark ? "Light" : "Dark"}
+          </button>
+        </div>
       </header>
+      {guideOpen && <HowToGuide onClose={() => setGuideOpen(false)} />}
       <div className="workspace">
       <aside className="sidebar">
         <div className="side-switch">
@@ -455,54 +462,6 @@ export default function App() {
         </>
         )}
 
-        <details className="rules">
-          <summary>Risk and load rules</summary>
-          <table>
-            <thead>
-              <tr>
-                <th>Condition</th>
-                <th>Low</th>
-                <th>Moderate</th>
-                <th>High</th>
-                <th>Severe</th>
-                <th>No Travel</th>
-              </tr>
-            </thead>
-            <tbody>
-              <tr>
-                <td>Wind</td>
-                <td>&lt;25 mph</td>
-                <td>25–34</td>
-                <td>35–44</td>
-                <td>45–54</td>
-                <td>≥55</td>
-              </tr>
-              <tr>
-                <td>Rain</td>
-                <td>&lt;0.10 in/hr</td>
-                <td>0.10–0.25</td>
-                <td>0.25–0.50</td>
-                <td>0.50–1.00</td>
-                <td>&gt;1.00</td>
-              </tr>
-              <tr>
-                <td>Snow</td>
-                <td>&lt;0.5 in/hr</td>
-                <td>0.5–1.0</td>
-                <td>1.0–2.0</td>
-                <td>2.0–3.0</td>
-                <td>&gt;3.0</td>
-              </tr>
-            </tbody>
-          </table>
-          <ul>
-            <li>55 mph or more is No Travel for any load.</li>
-            <li>45–54 mph and a load over 30,000 lb is No Travel.</li>
-            <li>35–44 mph and a load over 40,000 lb is Severe.</li>
-            <li>A checkpoint takes the worst of wind, rain, and snow.</li>
-            <li>Miles between checkpoints take the worse of the two ends.</li>
-          </ul>
-        </details>
       </aside>
       <div className={timelineOpen ? "map-column" : "map-column timeline-hidden"}>
       <MapView
@@ -543,6 +502,70 @@ export default function App() {
         <button type="button" onClick={() => jumpTo("map")}>Map</button>
         <button type="button" onClick={() => setDetailOpen(true)}>Details</button>
       </nav>
+    </div>
+  );
+}
+
+function HowToGuide({ onClose }: { onClose: () => void }) {
+  useEffect(() => {
+    function onKey(event: KeyboardEvent) {
+      if (event.key === "Escape") onClose();
+    }
+    document.addEventListener("keydown", onKey);
+    return () => document.removeEventListener("keydown", onKey);
+  }, [onClose]);
+
+  return (
+    <div className="guide-backdrop" onMouseDown={onClose}>
+      <section
+        className="guide"
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="how-to-title"
+        onMouseDown={(event) => event.stopPropagation()}
+      >
+        <div className="guide-head">
+          <h2 id="how-to-title">How to use</h2>
+          <button type="button" className="ghost" onClick={onClose}>
+            Close
+          </button>
+        </div>
+        <ol className="guide-steps">
+          <li>Enter From and To. After two letters, pick a suggested place, or type a city and state.</li>
+          <li>Set the departure time. Each stop uses the forecast for when the truck is expected there.</li>
+          <li>Open Advanced options for load weight and sample spacing: every 10, 25, or 50 miles.</li>
+          <li>Choose Find routes. Up to three roads are compared.</li>
+          <li>
+            The recommended road has the fewest no-travel miles, then fewest severe, then fewest high, then the lowest
+            average risk, then the shortest time.
+          </li>
+          <li>Select a route to read its checkpoints. Move the 0–48 hour slider to recolor the corridor. The slider does not send a new request.</li>
+          <li>Save the comparison and open it again from Saved routes.</li>
+        </ol>
+        <h3>How risk is scored</h3>
+        <p className="hint">A checkpoint takes the worst of wind, rain, and snow. A value on a shared boundary uses the higher band.</p>
+        <ul className="guide-bands">
+          <li>
+            <strong>Wind</strong>
+            <span>Low under 25 mph · Moderate 25–34 · High 35–44 · Severe 45–54 · No Travel at 55 or more</span>
+          </li>
+          <li>
+            <strong>Rain</strong>
+            <span>Low under 0.10 in/hr · Moderate 0.10–0.25 · High 0.25–0.50 · Severe 0.50–1.00 · No Travel over 1.00</span>
+          </li>
+          <li>
+            <strong>Snow</strong>
+            <span>Low under 0.5 in/hr · Moderate 0.5–1.0 · High 1.0–2.0 · Severe 2.0–3.0 · No Travel over 3.0</span>
+          </li>
+        </ul>
+        <h3>Load changes the wind band</h3>
+        <ul className="guide-load">
+          <li>55 mph or more is No Travel for any load.</li>
+          <li>45–54 mph is No Travel above 30,000 lb. Exactly 30,000 lb stays Severe.</li>
+          <li>35–44 mph is Severe above 40,000 lb. Exactly 40,000 lb stays High.</li>
+          <li>Miles between two checkpoints use the worse of the two ends.</li>
+        </ul>
+      </section>
     </div>
   );
 }
