@@ -1,10 +1,15 @@
 const KEY = "app-settings";
 
 export type RouteSort = "risk" | "time" | "distance";
+export type SampleMiles = 10 | 25 | 50;
+
+export function asSample(value: number): SampleMiles {
+  return value === 10 || value === 50 ? value : 25;
+}
 
 export type AppSettings = {
   load: string;
-  sample: 10 | 25 | 50;
+  sample: SampleMiles;
   routeSort: RouteSort;
   timelineOpen: boolean;
   heatmapOn: boolean;
