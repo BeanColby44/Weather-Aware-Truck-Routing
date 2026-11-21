@@ -1,7 +1,7 @@
 # Weather-Aware Truck Routing
 
 Weather-Aware Truck Routing is a React and Django planner for choosing a truck route by weather risk, load weight, and travel time. A driver enters an origin, a destination, a departure time, and a load weight in pounds. The app geocodes both places, requests up to three routes, and samples the hourly forecast along each road at the time the truck is expected to arrive there.
-
+Weather-Aware Truck Routing Dashboard (1).png
 ![A truck on a stormlit mountain highway](<Stormlit Mountain Highway.png>)
 
 Samples are taken every 10, 25, or 50 miles. Each sample is a checkpoint. Its risk is the worst of wind, rain, and snow, scored as Low, Moderate, High, Severe, or No Travel. Heavier loads tighten the wind rules. Wind of 35–44 mph stays High at 40,000 lb and becomes Severe above that weight. Wind of 45–54 mph stays Severe at 30,000 lb and becomes No Travel above that weight. Wind of 55 mph or more is No Travel for any load. Miles between two checkpoints use the worse of the two ends, so a bad stretch is counted even when a neighboring sample is calm.
