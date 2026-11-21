@@ -5,6 +5,7 @@ from rest_framework.permissions import AllowAny
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
+from planner.services.geocode import suggest
 from planner.services.heatmap import build_heatmap
 from planner.services.plan import build_plan
 from planner.services.risk import PlannerError
@@ -36,6 +37,14 @@ class PlanView(OpenAPIView):
         except Exception:
             logger.exception("plan failed")
             return Response({"error": "Something went wrong while building the plan."}, status=500)
+
+
+class PlacesView(OpenAPIView):
+    def get(self, request):
+        query = request.query_params.get("q", "")
+        if not isinstance(query, str):
+            query = ""
+        return Response({"suggestions": suggest(query)})
 
 
 class HeatmapView(OpenAPIView):

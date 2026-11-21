@@ -1,25 +1,12 @@
 import { FormEvent, useEffect, useMemo, useRef, useState } from "react";
 import { fetchHeatmap, planTrip } from "./api";
 import MapView from "./components/MapView";
+import PlaceField from "./components/PlaceField";
 import RouteDetail from "./components/RouteDetail";
 import { RISK_COLOR, RISK_LABEL, formatClock, formatWhen, weatherPhrase } from "./format";
 import { readSaved, tripKey, writeSaved, type SavedTrip } from "./saved";
 import { readSettings, writeSettings, type RouteSort } from "./settings";
 import type { HeatmapResponse, PlanResponse, RiskLevel, RoutePlan } from "./types";
-
-function PlacePin() {
-  return (
-    <svg className="place-pin" viewBox="0 0 32 42" width="22" height="28" aria-hidden="true">
-      <path
-        d="M16 40.5C16 40.5 29 24.5 29 15.2A13 13 0 1 0 3 15.2C3 24.5 16 40.5 16 40.5Z"
-        fill="#1faf6a"
-        stroke="#ffffff"
-        strokeWidth="2"
-      />
-      <circle cx="16" cy="15" r="5" fill="#ffffff" />
-    </svg>
-  );
-}
 
 const PRESETS = [
   {
@@ -357,20 +344,8 @@ export default function App() {
         <>
         <form className="trip" id="plan" onSubmit={onSubmit}>
           <h2>Route planning</h2>
-          <label className="place-field">
-            <PlacePin />
-            <span className="place-copy">
-              <span className="place-name">From</span>
-              <input value={origin} onChange={(event) => setOrigin(event.target.value)} placeholder="Chicago, IL" />
-            </span>
-          </label>
-          <label className="place-field">
-            <PlacePin />
-            <span className="place-copy">
-              <span className="place-name">To</span>
-              <input value={destination} onChange={(event) => setDestination(event.target.value)} placeholder="St. Louis, MO" />
-            </span>
-          </label>
+          <PlaceField label="From" value={origin} placeholder="Chicago, IL" onChange={setOrigin} />
+          <PlaceField label="To" value={destination} placeholder="St. Louis, MO" onChange={setDestination} />
           <label>
             Departure time
             <input type="datetime-local" value={departure} onChange={(event) => setDeparture(event.target.value)} />

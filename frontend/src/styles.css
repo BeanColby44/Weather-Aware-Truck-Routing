@@ -195,19 +195,64 @@ label {
 }
 
 .place-field {
+  position: relative;
+  margin-bottom: 8px;
+}
+
+.place-field > label {
   flex-direction: row;
   align-items: center;
   gap: 10px;
-  margin-bottom: 8px;
+  margin-bottom: 0;
   padding: 8px 12px;
   border: 1px solid var(--line);
   border-radius: 10px;
   background: var(--panel);
 }
 
-.place-field:focus-within {
+.place-field:focus-within > label {
   border-color: var(--blue);
   box-shadow: 0 0 0 3px rgba(36, 119, 242, 0.16);
+}
+
+.place-suggest {
+  position: absolute;
+  z-index: 30;
+  left: 0;
+  right: 0;
+  top: calc(100% + 4px);
+  margin: 0;
+  padding: 4px;
+  list-style: none;
+  background: var(--panel);
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  box-shadow: var(--shadow);
+  max-height: 220px;
+  overflow: auto;
+}
+
+.place-suggest button {
+  width: 100%;
+  text-align: left;
+  border: 0;
+  background: transparent;
+  border-radius: 8px;
+  padding: 8px 10px;
+  font-weight: 600;
+  cursor: pointer;
+  color: var(--ink);
+}
+
+.place-suggest button[aria-selected="true"],
+.place-suggest button:hover {
+  background: var(--soft);
+}
+
+.place-suggest mark {
+  background: transparent;
+  color: var(--blue);
+  font-weight: 800;
 }
 
 .place-pin { flex: none; display: block; }
